@@ -4,10 +4,10 @@ API en FastAPI que analiza reseñas de usuarios de App Store desde archivos Exce
 
 ## Contenido
 
-- [Instalación y configuración](backend/docs/Instalacion.md)
-- [Referencia de la API](backend/docs/API.md)
-- [Arquitectura](backend/docs/Arquitectura.md)
-- [Ejemplos de uso](backend/docs/Ejemplos.md)
+- [Instalación y configuración](Instalacion.md)
+- [Referencia de la API](API.md)
+- [Arquitectura](Arquitectura.md)
+- [Ejemplos de uso](Ejemplos.md)
 
 ## Endpoints principales
 
