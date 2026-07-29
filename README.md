@@ -2,7 +2,12 @@
 
 API en FastAPI que analiza reseñas de usuarios de App Store desde archivos Excel.
 
-Más información en [backend/docs/](backend/docs/) (instalación, API, arquitectura y ejemplos).
+## Contenido
+
+- [Instalación y configuración](Instalacion.md)
+- [Referencia de la API](API.md)
+- [Arquitectura](Arquitectura.md)
+- [Ejemplos de uso](Ejemplos.md)
 
 ## Endpoints principales
 
