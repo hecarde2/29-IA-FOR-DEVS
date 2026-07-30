@@ -2,23 +2,20 @@
 
 **Ingesta flexible de datos y optimización opcional de tokens para análisis de reseñas en Excel**
 
-Fecha de finalización: 28/07/2026
+Fecha de finalización: 30/07/2026
 
 ---
 
-## Flujo de traducción (corregido)
+## Flujo de procesamiento (actualizado)
 
 ```
-optent_tokens=True:
-  Reseña ES → deep_translator (Google Translate) → EN → deepseek-r1:1.5b (Ollama) → extracción estructurada
-
-optent_tokens=False:
-  Reseña ES → deepseek-r1:1.5b (Ollama) → extracción estructurada (sin traducir)
+optent_tokens=False:  Reseña ES → Clustering (TF-IDF + KMeans) → HashingVectorizer + LinearSVC → extracción
+optent_tokens=True:   Reseña ES → deep_translator → EN → Clustering → HashingVectorizer + LinearSVC → extracción
 ```
 
 - `deep_translator` usa Google Translate como backend (sin API key). Solo se activa cuando `optent_tokens=True`.
-- `deepseek-r1:1.5b` se ejecuta localmente vía Ollama (`http://127.0.0.1:11434`) y se usa **exclusivamente** para extracción de datos, nunca para traducción.
-- La traducción ES→EN reduce la longitud del texto de entrada al LLM (inglés suele ser más conciso), lo que ahorra tokens y reduce costos.
+- `scikit-learn` (LinearSVC) se usa para clasificación — **sin Ollama ni LLM local**.
+- Clustering por producto reduce 50k reseñas a ~25 grupos representativos (99.9%).
 
 ---
 
@@ -27,57 +24,57 @@ optent_tokens=False:
 | Método | Ruta | Descripción |
 |---|---|---|
 | `POST` | `/api/analyze` | Analizar una reseña individual (texto JSON + `optent_tokens`) |
-| `POST` | `/api/analyze/upload` | Subir un archivo `.xlsx` y procesar todas las reseñas |
-| `POST` | `/api/analyze/folder` | Indicar ruta de carpeta y procesar todos los `.xlsx` dentro |
+| `POST` | `/api/analyze/upload` | Subir un archivo `.xlsx` y procesar todas las reseñas (JSON) |
+| `POST` | `/api/analyze/upload/stream` | Subir `.xlsx` con progreso en tiempo real (SSE) |
+| `POST` | `/api/analyze/folder` | Indicar ruta de carpeta y procesar todos los `.xlsx` |
 | `GET` | `/api/analyze/export` | Exportar resultados en JSON o Excel |
-| `GET` | `/api/analyze/cost-estimate` | Estimación de costo para N reseñas/día (comparando directo vs optimizado) |
-| `GET` | `/` | Estado del servicio |
+| `GET` | `/api/analyze/cost-estimate` | Estimación de costo para N reseñas/día |
+| `GET` | `/` | Frontend HTML (servido por StaticFiles) |
 
 ---
 
 ## Archivos modificados
 
 ### `backend/app/services/analysis_service.py`
-- Reemplazada traducción simulada con `deep_translator.GoogleTranslator` real
-- Reemplazada extracción simulada con llamada a `ollama.generate(model="deepseek-r1:1.5b")` con prompt estructurado y formato JSON
-- Añadida función `_traducir_es_a_en()` con GoogleTranslator
-- Añadida función `_extraer_datos_error()` con Ollama + prompt de extracción estructurada
-- Añadido parámetro `optent_tokens` a `analizar_resena()` con lógica de ramificación
-- Añadida función `_detectar_columna_reseña()` para auto-detectar la columna de texto en Excel
-- Añadida función `procesar_archivo_excel()` para procesar archivos .xlsx desde bytes
-- Añadida función `procesar_carpeta_excel()` para procesar todos los .xlsx en una carpeta
+- Reemplazada extracción con Ollama → `scikit-learn` (HashingVectorizer + LinearSVC)
+- Añadida función `_cluster_producto()` con TF-IDF + MiniBatchKMeans por producto
+- Añadida función `_procesar_por_producto()` con paralelismo (ThreadPoolExecutor)
+- Añadida función `procesar_archivo_excel_stream()` con SSE streaming
+- Añadida función `_procesar_producto_grupo()` para procesar un producto en un thread
+- Añadida función `_procesar_sin_producto()` (fallback sin columna producto)
+- Añadida función `_optimal_k()` para determinar k óptimo con silhouette_score
+- Añadida función `_extraer_componente()` con keywords
+- Añadida función `_generar_summary()` extractivo
+- Añadida función `_traducir_lote()` con ThreadPoolExecutor
+- Añadida función `_detectar_columna_producto()`
+- Métricas de tokens reflejan el total del cluster
 
 ### `backend/app/models/schemas.py`
-- Añadido campo `optent_tokens: bool = False` a `ReviewRequest`
-- Añadido `BatchAnalysisResponse` con `total: int` y `results: list[AnalysisResponse]`
+- Añadidos campos `producto`, `cluster_id`, `reviews_in_cluster` a `ExtractedErrorData`
+- Añadido campo `optent_tokens: bool = False` a `ReviewRequest` (ya existía)
 
 ### `backend/app/routers/analyze.py`
-- Añadido `optent_tokens: bool = Form(False)` al endpoint `/api/analyze`
-- Añadido endpoint `POST /api/analyze/upload` con `UploadFile`
-- Añadido endpoint `POST /api/analyze/folder` con `folder_path: str`
-- Añadido endpoint `GET /api/analyze/export`
-- Añadido endpoint `GET /api/analyze/cost-estimate`
+- Añadido endpoint `POST /api/analyze/upload/stream` (SSE streaming)
+- Import actualizado para incluir `procesar_archivo_excel_stream`
 
 ### `backend/app/main.py`
-- Añadido `StaticFiles` mount en `/` para servir `frontend/index.html`
-- Eliminado comentario obsoleto "Como ahora no hay frontend"
-- Ruta `_frontend_dir` construida con Path relativo al proyecto
-
-### `backend/requirements.txt`
-Añadidos:
-- `deep-translator==1.11.4`
-- `ollama==0.6.2`
-- `python-multipart==0.0.18`
-
-### `backend/README.md`
-- Añadidas secciones 5a–5d con ejemplos curl para los nuevos endpoints
-- Actualizada sección 2 (flujo de datos) para reflejar nuevos endpoints
+- Eliminado `@app.get("/")` (conflicto con StaticFiles)
+- Simplificado banner (sin pyfiglet)
 
 ### `backend/app/core/config.py`
 - Sin cambios (ya tenía `PRICE_PER_MILLION_TOKENS_USD = 2.50`)
 
-### `backend/app/core/__init__.py`, `backend/app/__init__.py`, `backend/app/models/__init__.py`, `backend/app/routers/__init__.py`, `backend/app/services/__init__.py`
-- Sin cambios (archivos vacíos)
+### `backend/requirements.txt`
+- Añadidos: `scikit-learn`, `joblib`
+- Removidos: `ollama`, `faker`, `pyfiglet`
+
+### `frontend/index.html`
+- Añadida barra de progreso con etapas y conteo
+- Cambiado `runAnalysis()` a usar SSE streaming (`/api/analyze/upload/stream`)
+- Añadida función `readStream()` para leer Server-Sent Events
+- Añadida función `updateProgress()` para actualizar la barra
+- Tabla actualizada: columnas de producto, reviews en cluster, ahorro de tokens
+- Mensaje actualizado: "50k reseñas → ~25 grupos"
 
 ---
 
@@ -85,12 +82,19 @@ Añadidos:
 
 | Archivo | Descripción |
 |---|---|
-| `frontend/index.html` | Interfaz web HTML para analizar reseñas desde Excel |
-| `documentacion/Plan_Implementacion_HU-012.md` | Plan detallado de implementación por fases |
-| `documentacion/Resumen_HU-012.md` | Este archivo — resumen de cambios |
-| `README.md` (raíz) | Configuración de instrucciones para agentes |
-| `AGENTS.md` | Instrucciones del proyecto para futuras sesiones |
-| `TODO.md` | Lista de tareas con seguimiento de progreso |
+| `frontend/index.html` | Interfaz web con barra de progreso y SSE streaming |
+| `scripts/train_pipeline.py` | Entrena modelos scikit-learn con pseudo-labels |
+| `app/models/__init__.py` | Paquete de modelos |
+| `app/models/vectorizer.joblib` | HashingVectorizer entrenado |
+| `app/models/error_type_model.joblib` | LinearSVC para error_type (7 clases) |
+| `app/models/severity_model.joblib` | LinearSVC para severity (4 clases) |
+| `README.md` (raíz) | Documentación principal actualizada |
+| `backend/README.md` | Documentación del backend actualizada |
+| `HU.md` | Historia de usuario actualizada |
+| `TODO.md` | Lista de tareas completadas |
+| `AGENTS.md` | Configuración del proyecto actualizada |
+| `documentacion/Plan_Implementacion_HU-012.md` | Plan de implementación actualizado |
+| `documentacion/Resumen_HU-012.md` | Este archivo |
 
 ---
 
@@ -98,32 +102,39 @@ Añadidos:
 
 | Paquete | Versión | Propósito |
 |---|---|---|
-| `deep-translator` | 1.11.4 | Traducción ES→EN (Google Translate backend) |
-| `ollama` | 0.6.2 | Integración con Ollama para llamadas a deepseek-r1:1.5b |
-| `python-multipart` | 0.0.18 | Soporte para upload de archivos en FastAPI |
+| `scikit-learn` | 1.9.0 | TF-IDF, MiniBatchKMeans, HashingVectorizer, LinearSVC, silhouette_score |
+| `joblib` | 1.5.3 | Serialización de modelos |
+
+## Dependencias removidas
+
+| Paquete | Motivo |
+|---|---|
+| `ollama` | Reemplazado por scikit-learn |
+| `faker` | Solo usado para generación de datos, no necesario en prod |
+| `pyfiglet` | Solo para banner, simplificado |
 
 ---
 
-## Frontend (`frontend/index.html`)
+## Rendimiento
 
-Página única con:
-- Selector de modo (archivo .xlsx / carpeta)
-- Drag-and-drop para archivos .xlsx
-- Input de ruta de carpeta
-- Toggle `optent_tokens`
-- Botón de ejecutar análisis
-- Tabla de resultados con `error_type`, `component`, `severity`, tokens ES/EN, costo USD
-- Panel de métricas agregadas (total reseñas, tokens ES, tokens EN, ahorro económico)
-- Botones de export JSON/Excel
-- Indicador de estado (cargando / éxito / error)
+| Operación | 50k reseñas |
+|---|---|
+| Lectura Excel | ~2.9s |
+| Clustering (5 productos, paralelo) | ~2s |
+| Token counting (tiktoken) | ~0.6s |
+| Clasificación (LinearSVC) | <0.1s |
+| **Total** | **~4.6s** |
 
 ---
 
 ## Notas técnicas
 
-- **Ollama**: debe estar corriendo en `http://127.0.0.1:11434` con el modelo `deepseek-r1:1.5b` descargado
-- **deep_translator**: usa Google Translate sin API key; para volúmenes altos (10K/día) considerar rate limiting o API key de DeepL
-- **Tokenización**: `tiktoken` con `o200k_base` para medir tokens del modelo target
-- **Precio de referencia**: `$2.50 USD por millón de tokens` (costo simbólico, Ollama es gratuito)
-- **Detección de columna**: heuristica que busca nombres como `reseña`, `review`, `text`, `comment`, `texto`
-- ** Seguridad**: la ruta de carpeta en `/api/analyze/folder` no está restringida a sandbox (pendiente de validación para producción)
+- **scikit-learn**: `HashingVectorizer` + `LinearSVC` para clasificación. Inferencia en <1ms por reseña.
+- **deep_translator**: usa Google Translate como backend (sin API key). Para volúmenes altos, considerar rate limiting o API key de DeepL.
+- **Tokenización**: `tiktoken` con `o200k_base` para medir tokens del modelo target.
+- **Precio de referencia**: `$2.50 USD por millón de tokens`.
+- **Detección de columna**: heurística que busca nombres como `reseña`, `review`, `text`, `comment`, `texto`.
+- **Detección de producto**: heurística que busca `producto`, `product`, `app`, `aplicacion`.
+- **Clustering**: `MiniBatchKMeans` con `silhouette_score` para k óptimo (máx 10 clusters por producto).
+- **CPU tuning**: `OMP_NUM_THREADS=12`, `MKL_NUM_THREADS=12`, `OPENBLAS_NUM_THREADS=12`.
+- **SSE Streaming**: endpoint `/api/analyze/upload/stream` envía eventos con etapas: lectura, clustering, clasificacion, completo.

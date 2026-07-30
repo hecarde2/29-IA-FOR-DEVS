@@ -18,7 +18,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.core.config import APP_DESCRIPTION, APP_TITLE, APP_VERSION, GEOXOR_BANNER_LINES, RAINBOW_COLORS, BANNER_RESET
+from app.core.config import APP_DESCRIPTION, APP_TITLE, APP_VERSION
 from app.routers import analyze
 
 app = FastAPI(
@@ -27,9 +27,7 @@ app = FastAPI(
     version=APP_VERSION,
 )
 
-for i, line in enumerate(GEOXOR_BANNER_LINES):
-    color = RAINBOW_COLORS[i % len(RAINBOW_COLORS)]
-    print(f"{color}{line}{BANNER_RESET}")
+print(f"{APP_TITLE} v{APP_VERSION}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,12 +42,3 @@ app.include_router(analyze.router)
 _frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"
 if _frontend_dir.is_dir():
     app.mount("/", StaticFiles(directory=str(_frontend_dir), html=True), name="frontend")
-
-
-@app.get("/", tags=["Estado"])
-async def root():
-    return {
-        "status": "ok",
-        "servicio": APP_TITLE,
-        "docs": "/docs",
-    }

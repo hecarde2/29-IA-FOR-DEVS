@@ -10,7 +10,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .container { max-width: 960px; margin: 0 auto; padding: 20px; }
 h1 { text-align: center; margin-bottom: 10px; color: #1a1a2e; font-size: 24px; }
 h2 { margin: 20px 0 10px; color: #1a1a2e; font-size: 18px; }
-h3 { margin: 15px 0 8px; color: #555; font-size: 14px; }
 .subtitle { text-align: center; color: #888; margin-bottom: 20px; font-size: 13px; }
 
 .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -28,15 +27,6 @@ h3 { margin: 15px 0 8px; color: #555; font-size: 14px; }
 .folder-input input { flex: 1; padding: 8px 12px; border: 2px solid #ccc; border-radius: 6px; font-size: 14px; }
 .folder-input input:focus { border-color: #1a1a2e; outline: none; }
 
-.toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px; background: #fff; border-radius: 8px; }
-.toggle-row label { font-size: 14px; cursor: pointer; }
-.toggle { position: relative; width: 44px; height: 24px; }
-.toggle input { opacity: 0; width: 0; height: 0; }
-.toggle .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 24px; transition: 0.2s; }
-.toggle .slider:before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
-.toggle input:checked + .slider { background: #1a1a2e; }
-.toggle input:checked + .slider:before { transform: translateX(20px); }
-
 .btn { padding: 10px 24px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
 .btn-primary { background: #1a1a2e; color: #fff; }
 .btn-primary:hover { background: #333; }
@@ -46,17 +36,24 @@ h3 { margin: 15px 0 8px; color: #555; font-size: 14px; }
 
 .actions { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
 
-.status { padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; }
-.status.loading { background: #fff3cd; color: #856404; }
-.status.success { background: #d4edda; color: #155724; }
-.status.error { background: #f8d7da; color: #721c24; }
+.status { padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; display: none; }
+.status.loading { background: #fff3cd; color: #856404; display: block; }
+.status.success { background: #d4edda; color: #155724; display: block; }
+.status.error { background: #f8d7da; color: #721c24; display: block; }
 
-.metrics { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
-.metric-card { flex: 1; min-width: 140px; background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+.metrics { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+.metric-card { flex: 1; min-width: 130px; background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
 .metric-card .label { font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px; }
-.metric-card .value { font-size: 20px; font-weight: bold; color: #1a1a2e; }
+.metric-card .value { font-size: 18px; font-weight: bold; color: #1a1a2e; }
 .metric-card .value.green { color: #28a745; }
 .metric-card .value.red { color: #dc3545; }
+
+.progress-container { margin-bottom: 15px; background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: none; }
+.progress-container.active { display: block; }
+.progress-bar-track { width: 100%; height: 12px; background: #e9ecef; border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, #1a1a2e, #4a4a8a); border-radius: 6px; transition: width 0.3s ease; width: 0%; }
+.progress-info { display: flex; justify-content: space-between; font-size: 13px; color: #666; }
+.progress-stage { font-weight: bold; color: #1a1a2e; }
 
 table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 13px; }
 th { background: #1a1a2e; color: #fff; padding: 10px 8px; text-align: left; font-size: 12px; text-transform: uppercase; }
@@ -68,7 +65,6 @@ tr:hover { background: #f8f8f8; }
 .severity-critical { color: #dc3545; font-weight: bold; }
 
 .table-scroll { max-height: 400px; overflow-y: auto; }
-
 .empty-state { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
 
 .result-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: #fff; }
@@ -84,7 +80,7 @@ tr:hover { background: #f8f8f8; }
 <body>
 <div class="container">
   <h1>App Store Review Analyzer</h1>
-  <p class="subtitle">Ingesta flexible de reseñas con optimización opcional de tokens</p>
+  <p class="subtitle">Agrupación inteligente por producto + optimización de tokens por traducción automática (ES → EN)</p>
 
   <h2>Modo de ingesta</h2>
   <div class="mode-selector">
@@ -104,23 +100,23 @@ tr:hover { background: #f8f8f8; }
     </div>
   </div>
 
-  <div class="toggle-row">
-    <label>
-      <div class="toggle">
-        <input type="checkbox" id="optentTokens">
-        <span class="slider"></span>
-      </div>
-      <strong>optent_tokens</strong> — Traducir ES→EN antes del análisis (optimizar tokens)
-    </label>
-  </div>
-
   <div class="actions">
     <button class="btn btn-primary" id="btnRun" onclick="runAnalysis()">Ejecutar análisis</button>
     <button class="btn btn-secondary" id="btnExportJson" onclick="exportResults('json')" style="display:none;">Exportar JSON</button>
     <button class="btn btn-secondary" id="btnExportExcel" onclick="exportResults('excel')" style="display:none;">Exportar Excel</button>
   </div>
 
-  <div id="status" class="status" style="display:none;"></div>
+  <div id="status" class="status"></div>
+
+  <div id="progressContainer" class="progress-container">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-info">
+      <span class="progress-stage" id="progressStage">Iniciando...</span>
+      <span id="progressCount"></span>
+    </div>
+  </div>
 
   <div id="metrics" class="metrics" style="display:none;">
     <div class="metric-card">
@@ -128,15 +124,23 @@ tr:hover { background: #f8f8f8; }
       <div class="value" id="metricTotal">0</div>
     </div>
     <div class="metric-card">
-      <div class="label">Tokens ES totales</div>
+      <div class="label">Tokens ES (Sin Traducir)</div>
       <div class="value" id="metricEs">0</div>
     </div>
     <div class="metric-card">
-      <div class="label">Tokens EN totales</div>
+      <div class="label">Tokens EN (Traducido)</div>
       <div class="value" id="metricEn">0</div>
     </div>
     <div class="metric-card">
-      <div class="label">Ahorro económico</div>
+      <div class="label">Costo Sin Traducir</div>
+      <div class="value red" id="metricCostEs">$0</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Costo Traducido</div>
+      <div class="value" id="metricCostEn">$0</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Ahorro Económico</div>
       <div class="value green" id="metricSave">$0</div>
     </div>
   </div>
@@ -178,25 +182,46 @@ fileArea.addEventListener('drop', (e) => {
 
 function setStatus(msg, type) {
     const el = document.getElementById('status');
-    el.style.display = 'block';
     el.className = 'status ' + type;
     el.textContent = msg;
 }
 
 function hideStatus() {
-    document.getElementById('status').style.display = 'none';
+    document.getElementById('status').className = 'status';
+}
+
+function showProgress() {
+    document.getElementById('progressContainer').classList.add('active');
+}
+
+function hideProgress() {
+    document.getElementById('progressContainer').classList.remove('active');
+    document.getElementById('progressFill').style.width = '0%';
+}
+
+function updateProgress(stage, message, progress, total, processed) {
+    const pct = Math.min(Math.max(progress || 0, 0), 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressStage').textContent = message;
+
+    const countEl = document.getElementById('progressCount');
+    if (total && processed !== undefined) {
+        countEl.textContent = `${processed} / ${total}`;
+    } else {
+        countEl.textContent = '';
+    }
 }
 
 async function runAnalysis() {
     hideStatus();
+    hideProgress();
     const btn = document.getElementById('btnRun');
     btn.disabled = true;
-    btn.textContent = 'Procesando...';
-    setStatus('Procesando...', 'loading');
+    btn.textContent = 'Iniciando...';
+    setStatus('Iniciando...', 'loading');
 
     try {
         let url, formData;
-        const optentTokens = document.getElementById('optentTokens').checked;
 
         if (currentMode === 'file') {
             const file = fileInput.files[0];
@@ -206,8 +231,10 @@ async function runAnalysis() {
             }
             formData = new FormData();
             formData.append('file', file);
-            formData.append('optent_tokens', optentTokens);
-            url = '/api/analyze/upload';
+            formData.append('optent_tokens', 'true');
+            
+            // Agregamos el parámetro tanto en Query Param como en FormData por compatibilidad con FastAPI
+            url = '/api/analyze/upload/stream?optent_tokens=true';
         } else {
             const folderPath = document.getElementById('folderPath').value.trim();
             if (!folderPath) {
@@ -216,31 +243,98 @@ async function runAnalysis() {
             }
             formData = new FormData();
             formData.append('folder_path', folderPath);
-            formData.append('optent_tokens', optentTokens);
-            url = '/api/analyze/folder';
+            formData.append('optent_tokens', 'true');
+            url = '/api/analyze/folder?optent_tokens=true';
         }
 
+        btn.textContent = 'Procesando...';
+        showProgress();
+        setStatus('Procesando...', 'loading');
+
         const response = await fetch(url, { method: 'POST', body: formData });
+
         if (!response.ok) {
             const err = await response.json().catch(() => ({}));
             throw new Error(err.detail || `HTTP ${response.status}`);
         }
-        const data = await response.json();
-        currentResults = data.results || [];
 
-        renderResults(currentResults);
-        renderMetrics(currentResults);
-
-        document.getElementById('btnExportJson').style.display = 'inline-block';
-        document.getElementById('btnExportExcel').style.display = 'inline-block';
-
-        setStatus(`Completado: ${currentResults.length} reseña(s) analizada(s)`, 'success');
+        if (currentMode === 'file') {
+            await readStream(response);
+        } else {
+            const data = await response.json();
+            currentResults = data.results || [];
+            finishAnalysis(currentResults);
+        }
     } catch (err) {
+        hideProgress();
         setStatus('Error: ' + err.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Ejecutar análisis';
     }
+}
+
+async function readStream(response) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let results = [];
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+            if (line.startsWith('data: ')) {
+                try {
+                    const event = JSON.parse(line.slice(6));
+
+                    if (event.stage === 'completo') {
+                        results = event.results || [];
+                        finishAnalysis(results, event.timings);
+                        return;
+                    }
+
+                    updateProgress(
+                        event.stage,
+                        event.message,
+                        event.progress,
+                        event.total,
+                        event.processed
+                    );
+
+                    if (event.results && event.results.length) {
+                        results = event.results;
+                    }
+                } catch (e) {
+                    console.warn('Error parsing SSE event:', e);
+                }
+            }
+        }
+    }
+}
+
+function finishAnalysis(results, timings) {
+    currentResults = results;
+
+    if (!results.length) {
+        hideProgress();
+        setStatus('No se encontraron reseñas para analizar', 'success');
+        return;
+    }
+
+    renderResults(results);
+    renderMetrics(results);
+
+    document.getElementById('btnExportJson').style.display = 'inline-block';
+    document.getElementById('btnExportExcel').style.display = 'inline-block';
+
+    hideProgress();
+    setStatus(`Completado: ${results.length} reseña(s) analizada(s)`, 'success');
 }
 
 function renderResults(results) {
@@ -251,23 +345,35 @@ function renderResults(results) {
     }
 
     let html = '<table><thead><tr>';
-    html += '<th>Reseña</th><th>Error type</th><th>Component</th><th>Severity</th><th>Tokens ES</th><th>Tokens EN</th><th>Costo USD</th>';
+    html += '<th>Producto</th><th>Reseña representativa</th><th>Componente / Tipo</th><th>Severidad</th><th>Reviews</th><th>Tokens ES</th><th>Tokens EN</th><th>Ahorro tokens</th><th>Costo USD (EN)</th>';
     html += '</tr></thead><tbody>';
 
-    results.forEach((r, i) => {
+    results.forEach((r) => {
         const m = r.metrics || {};
-        const e = r.extracted_data || {};
-        const cost = m.original_tokens ? ((m.original_tokens / 1e6) * 2.50).toFixed(6) : '0';
-        const sevClass = 'severity-' + (e.severity || 'low');
-        const tagClass = 'tag-' + (e.error_type || 'other');
+        const e = r.extracted_data || r || {};
+        
+        const errorType = String(e.error_type || 'other').trim().toLowerCase();
+        const component = e.component || '';
+        const severity = String(e.severity || 'low').trim().toLowerCase();
+
+        const origTokens = m.original_tokens || 0;
+        const translTokens = m.translated_tokens || 0;
+        const ahorroTokens = origTokens - translTokens;
+        const cost = translTokens ? ((translTokens / 1e6) * 2.50).toFixed(4) : '0.0000';
+
+        const sevClass = 'severity-' + severity;
+        const tagClass = 'tag-' + errorType;
+        const nReviews = e.reviews_in_cluster || r.reviews_in_cluster || 1;
 
         html += '<tr>';
-        html += `<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(e.summary_es || '')}">${escHtml(e.summary_es || 'N/A')}</td>`;
-        html += `<td><span class="result-tag ${tagClass}">${escHtml(e.error_type || 'unknown')}</span></td>`;
-        html += `<td>${escHtml(e.component || 'unknown')}</td>`;
-        html += `<td class="${sevClass}">${escHtml(e.severity || 'low')}</td>`;
-        html += `<td>${m.original_tokens ?? 0}</td>`;
-        html += `<td>${m.translated_tokens ?? 0}</td>`;
+        html += `<td><strong>${escHtml(e.producto || e.product || 'N/A')}</strong></td>`;
+        html += `<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(e.summary_es || e.summary || '')}">${escHtml(e.summary_es || e.summary || 'N/A')}</td>`;
+        html += `<td><span class="result-tag ${tagClass}">${escHtml(errorType)}</span>${component ? ' <span style="font-size:11px;color:#666;">' + escHtml(component) + '</span>' : ''}</td>`;
+        html += `<td class="${sevClass}">${escHtml(severity)}</td>`;
+        html += `<td>${nReviews.toLocaleString()}</td>`;
+        html += `<td>${origTokens.toLocaleString()}</td>`;
+        html += `<td>${translTokens.toLocaleString()}</td>`;
+        html += `<td style="font-weight:bold;color:${ahorroTokens >= 0 ? '#28a745' : '#dc3545'}">${ahorroTokens >= 0 ? '+' : ''}${ahorroTokens.toLocaleString()}</td>`;
         html += `<td>$${cost}</td>`;
         html += '</tr>';
     });
@@ -287,22 +393,23 @@ function renderMetrics(results) {
         totalEn += m.translated_tokens || 0;
     });
 
-    const costoDirecto = (totalEs / 1e6) * 2.50;
-    const costoOptimizado = (totalEn / 1e6) * 2.50;
-    const ahorro = costoDirecto - costoOptimizado;
+    const costoSinTraducir = (totalEs / 1e6) * 2.50;
+    const costoTraducido = (totalEn / 1e6) * 2.50;
+    const ahorro = costoSinTraducir - costoTraducido;
 
     document.getElementById('metricTotal').textContent = results.length;
     document.getElementById('metricEs').textContent = totalEs.toLocaleString();
     document.getElementById('metricEn').textContent = totalEn.toLocaleString();
+    document.getElementById('metricCostEs').textContent = '$' + costoSinTraducir.toFixed(4);
+    document.getElementById('metricCostEn').textContent = '$' + costoTraducido.toFixed(4);
     document.getElementById('metricSave').textContent = '$' + ahorro.toFixed(4);
     document.getElementById('metricSave').className = 'value ' + (ahorro >= 0 ? 'green' : 'red');
 }
 
 async function exportResults(format) {
     try {
-        const optentTokens = document.getElementById('optentTokens').checked;
         const mode = currentMode === 'folder' ? 'folder' : 'file';
-        const url = `/api/analyze/export?format=${format}&optent_tokens=${optentTokens}&mode=${mode}`;
+        const url = `/api/analyze/export?format=${format}&optent_tokens=true&mode=${mode}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Export failed');
 

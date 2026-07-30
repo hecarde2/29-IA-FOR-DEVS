@@ -15,6 +15,7 @@ from app.models.schemas import AnalysisResponse, BatchAnalysisResponse, ReviewRe
 from app.services.analysis_service import (
     analizar_resena,
     procesar_archivo_excel,
+    procesar_archivo_excel_stream,
     procesar_carpeta_excel,
 )
 from pathlib import Path
@@ -42,6 +43,25 @@ async def analyze_upload(
     contents = await file.read()
     results = procesar_archivo_excel(contents, optent_tokens=optent_tokens)
     return BatchAnalysisResponse(total=len(results), results=results)
+
+
+@router.post("/analyze/upload/stream")
+async def analyze_upload_stream(
+    file: UploadFile,
+    optent_tokens: bool = Form(False),
+):
+    if not file.filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="Solo se aceptan archivos .xlsx.")
+    contents = await file.read()
+    return StreamingResponse(
+        procesar_archivo_excel_stream(contents, optent_tokens=optent_tokens),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.post("/analyze/folder", response_model=BatchAnalysisResponse)

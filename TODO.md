@@ -1,23 +1,23 @@
 # TODO — HU-012
 
-> **Estado: COMPLETADO** — Todas las fases implementadas (28/07/2026)
+> **Estado: COMPLETADO** — Todas las fases implementadas (30/07/2026)
 
 ---
 
-## Fase 1: Integración LLM real (Ollama + deep_translator)
-- [x] Reemplazar `_traducir_es_a_en()` con llamada real a `deep_translator.GoogleTranslator`
-- [x] Reemplazar `_extraer_datos_error()` con llamada a `deepseek-r1:1.5b` vía Ollama (`ollama.generate()`)
-- [x] Añadir `optent_tokens` parameter a `analizar_resena()`
-- [x] Si `optent_tokens=True`: ES → deep_translator → EN → Ollama extracción
-- [x] Si `optent_tokens=False`: ES → Ollama extracción directa
-- [x] Añadir `deep-translator==1.11.4` a `requirements.txt`
-- [x] Añadir `ollama==0.6.2` a `requirements.txt`
+## Fase 1: Integración scikit-learn (reemplaza Ollama)
+- [x] Remplazar `_extraer_datos_error()` de Ollama → scikit-learn (TF-IDF + LinearSVC)
+- [x] Generar pseudo-labels con keywords para entrenamiento
+- [x] Entrenar `LinearSVC` para `error_type` (7 clases) y `severity` (4 clases)
+- [x] Guardar modelos con `joblib` en `app/models/`
+- [x] Añadir `scikit-learn` y `joblib` a `requirements.txt`
+- [x] Remover `ollama` y `pyfiglet` de `requirements.txt`
 
 ## Fase 2: Endpoint de upload de archivo (Modo A)
 - [x] Nuevo endpoint `POST /api/analyze/upload` con `UploadFile`
+- [x] Nuevo endpoint `POST /api/analyze/upload/stream` con SSE (progresso en tiempo real)
 - [x] Leer `.xlsx` con `pandas` + `openpyxl`
-- [x] Detección automática de columna de reseñas
-- [x] Procesar cada fila y retornar lista de `AnalysisResponse`
+- [x] Detección automática de columna de reseñas y producto
+- [x] Procesar en batch y retornar lista de `AnalysisResponse`
 - [x] Añadir `python-multipart==0.0.18` a `requirements.txt`
 
 ## Fase 3: Endpoint de escaneo de carpeta (Modo B)
@@ -35,7 +35,7 @@
 ## Fase 5: Export JSON/Excel
 - [x] Nuevo endpoint `GET /api/analyze/export`
 - [x] Soporte `?format=json` y `?format=excel`
-- [x] Retornar JSON con schema limpio (`error_type`, `component`, `severity`, `summary_en`, `summary_es`, `tokens`, `cost_usd`)
+- [x] Retornar JSON con schema limpio
 
 ## Fase 6: Análisis de impacto económico
 - [x] Nuevo endpoint `GET /api/analyze/cost-estimate?reviews_per_day=10000&optent_tokens=true|false`
@@ -43,26 +43,47 @@
 - [x] Calcular costo directo vs optimizado
 - [x] Retornar ahorro diario/mensual/anual a `$2.50/M tokens`
 
-## Fase 7: Frontend HTML
+## Fase 7: Agrupación semántica por producto (Clustering)
+- [x] `groupby('producto')` → 5 grupos
+- [x] `TfidfVectorizer` + `MiniBatchKMeans` por producto
+- [x] k óptimo con `silhouette_score` (máx 10 clusters)
+- [x] Seleccionar representante (más cercano al centroide)
+- [x] Contar tokens de todo el cluster (no solo el representante)
+- [x] Añadir `producto`, `cluster_id`, `reviews_in_cluster` al schema
+
+## Fase 8: Progreso en tiempo real (SSE)
+- [x] Endpoint `POST /api/analyze/upload/stream` con `StreamingResponse`
+- [x] Eventos SSE: lectura, clustering, clasificacion, completo
+- [x] Barra de progreso en frontend con `fetch()` + `ReadableStream`
+- [x] Mostrar etapa actual, count procesado/total
+
+## Fase 9: Frontend HTML
 - [x] Crear `frontend/index.html`
 - [x] Selector de modo (Modo A / Modo B)
 - [x] Input de archivo `.xlsx` (Modo A) con drag-and-drop
 - [x] Input de ruta de carpeta (Modo B)
 - [x] Toggle `optent_tokens`
 - [x] Botón "Ejecutar análisis"
-- [x] Tabla de resultados con columnas: reseña, error_type, component, severity, tokens_es, tokens_en, costo_usd
+- [x] Barra de progreso con etapas y conteo
+- [x] Tabla de resultados: producto, reseña, error_type, severity, reviews en cluster, tokens, ahorro
 - [x] Panel de métricas agregadas
 - [x] Botón de export JSON/Excel
-- [x] Indicador de carga/estado
 
-## Fase 8: Actualizar requirements.txt
-- [x] Añadir `deep-translator==1.11.4`
-- [x] Añadir `ollama==0.6.2`
-- [x] Añadir `python-multipart==0.0.18`
-- [x] Verificar compatibilidad con Python 3.14+
+## Fase 10: Paralelismo y optimización de CPU
+- [x] `ThreadPoolExecutor` para clustering por producto (5 workers)
+- [x] `OMP_NUM_THREADS=12`, `MKL_NUM_THREADS=12`, `OPENBLAS_NUM_THREADS=12`
+- [x] Batch processing: vectorizer.transform() + clf.predict() sobre todos los datos
+- [x] HashingVectorizer (stateless, sin vocabulario)
+- [x] Benchmark de cada etapa
 
-## Fase 9: Documentación
-- [x] Crear `documentacion/Plan_Implementacion_HU-012.md`
-- [x] Crear `README.md` actualizado (backend/README.md con nuevos endpoints)
-- [x] Crear `AGENTS.md` con configuración del proyecto
-- [x] Crear `TODO.md` con seguimiento de fases
+## Fase 11: Actualizar requirements.txt
+- [x] Añadir `scikit-learn`, `joblib`
+- [x] Remover `ollama`, `faker`, `pyfiglet`
+- [x] Verificar compatibilidad con Python 3.12+
+
+## Fase 12: Documentación
+- [x] Actualizar `README.md` (raíz)
+- [x] Actualizar `backend/README.md`
+- [x] Actualizar `HU.md`
+- [x] Actualizar `AGENTS.md`
+- [x] Actualizar `TODO.md`

@@ -36,6 +36,9 @@ class ExtractedErrorData(BaseModel):
     severity: SeverityLevel
     summary_en: str
     summary_es: str
+    producto: str = ""
+    cluster_id: int = -1
+    reviews_in_cluster: int = 0
 
 
 class AnalysisResponse(BaseModel):
